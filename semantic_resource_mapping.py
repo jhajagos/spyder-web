@@ -5,8 +5,6 @@
 """
 
 from rest_client import *
-import rdflib
-from pprint import pprint
 
 class SparqlResult(object):
     def __init__(self,raw_sparql_result,type="json"):
