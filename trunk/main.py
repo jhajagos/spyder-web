@@ -53,6 +53,10 @@ def main(environ, start_response):
             uri_to_map = config["uri_to_map"]
         else:
             Errors[NoUriToMap] = "The uri to map is not found. Normally this is the uri of the server"
+        if config.has_key("default_graph"):
+            default_graph = config["default_graph"]
+        else:
+            default_graph = None
 
     else:
         Errors["NoConfigurationInstance"] = "No configuration instance found please set os.environ['SpyderWebConfigInstance'] = '/var/web/rxnorm/config.json'"
@@ -63,7 +67,7 @@ def main(environ, start_response):
         response = str(Errors)
     else:
 
-        semantic_resource_map = SemanticResourceMapping(semantic_server,uri_to_map)
+        semantic_resource_map = SemanticResourceMapping(semantic_server,uri_to_map,default_graph)
         requested_path = environ["PATH_INFO"]
         found_uri = semantic_resource_map.find_resource(requested_path)
 
@@ -83,7 +87,7 @@ def main(environ, start_response):
             sparql_obj = semantic_resource_map.get_resource(requested_path)
             
             response += "<table>\n"
-            for row in sparql_obj.raw_result:
+            for row in sparql_obj:
                 response += "<tr><td>"
                 response += "%s</td><td>" % row["predicate"]["value"]
                 if row["object"]["type"] == "uri":
