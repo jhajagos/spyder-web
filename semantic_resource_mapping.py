@@ -39,9 +39,14 @@ class SparqlEndPointConnection(SemanticServerConnection):
 class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
     "Connect to a Virtuoso Sparql Endpoint"
     
-    def query(self,query_string):
+    def query(self,query_string,default_graph):
+
+        query_hash = {"query":query_string}
+        if default_graph is not None:
+            query_hash["default-graph-uri"] = default_graph
+
         rest_client = RestClient(self.sparql_endpoint_address,{"accept":"application/json"})
-        (response,result) = rest_client.get(rest_client.encode_query_string({"query":query_string}))
+        (response,result) = rest_client.get(rest_client.encode_query_string(query_hash))
         if response["status"] == "200":
             return SparqlResult(result)
         else:
@@ -49,15 +54,21 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
 
 class SemanticResourceMapping(object):
     "Handles mapping of a reasource from a HTTP request to the uri in the web server"
-    def __init__(self, semantic_connection_obj, uri_base_map, default_graph=None):
+    def __init__(self, semantic_connection_obj, uri_base_map, default_graph=None,limit=1000):
         self.semantic_obj = semantic_connection_obj
         self.uri_base_map = uri_base_map
         self.default_graph = default_graph
+        self.limit = limit
         self.resource_map = {} #Resource caches
         
     def find_resource(self,path_request):
         full_uri = self.full_uri(path_request)
-        sparql_result = self.semantic_obj.query(self.semantic_obj.predicate_resource_string(full_uri))
+        if self.limit:
+            limit_string = "limit %s" % self.limit
+        else:
+            limit_string = ""
+
+        sparql_result = self.semantic_obj.query(self.semantic_obj.predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
         
         if len(sparql_result) == 0:
             return 0
