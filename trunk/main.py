@@ -78,55 +78,84 @@ def main(environ, start_response):
             response="""<html>
             <head><title>%s</title>
             <style>
-            /*
-	Web20 Table Style
-	written by Netway Media, http://www.netway-media.com
+/*
+	Blue Dream
+	Written by Teylor Feliz  http://www.admixweb.com
 */
-table {
-  border-collapse: collapse;
-  border: 1px solid #666666;
-  font: normal 11px verdana, arial, helvetica, sans-serif;
-  color: #363636;
-  background: #f6f6f6;
-  text-align:left;
-  }
-caption {
-  text-align: center;
-  font: bold 16px arial, helvetica, sans-serif;
-  background: transparent;
-  padding:6px 4px 8px 0px;
-  color: #CC00FF;
-  text-transform: uppercase;
+
+
+table { background:#D3E4E5;
+ border:1px solid gray;
+ border-collapse:collapse;
+ color:#fff;
+ font:normal 12px verdana, arial, helvetica, sans-serif;
 }
-thead, tfoot {
-background:url(bg1.png) repeat-x;
-text-align:left;
-height:30px;
+caption { border:1px solid #5C443A;
+ color:#5C443A;
+ font-weight:bold;
+ letter-spacing:20px;
+ padding:6px 4px 8px 0px;
+ text-align:center;
+ text-transform:uppercase;
 }
-thead th, tfoot th {
-padding:5px;
+td, th { color:#363636;
+ padding:.4em;
 }
-table a {
-color: #333333;
-text-decoration:none;
+tr { border:1px dotted gray;
 }
-table a:hover {
-text-decoration:underline;
+thead th, tfoot th { background:#5C443A;
+ color:#FFFFFF;
+ padding:3px 10px 3px 10px;
+ text-align:left;
+ text-transform:uppercase;
 }
-tr.odd {
-background: #f1f1f1;
+tbody td a { color:#363636;
+ text-decoration:none;
 }
-tbody th, tbody td {
-padding:5px;
+tbody td a:visited { color:gray;
+ text-decoration:line-through;
+}
+tbody td a:hover { text-decoration:underline;
+}
+tbody th a { color:#363636;
+ font-weight:normal;
+ text-decoration:none;
+}
+tbody th a:hover { color:#363636;
+}
+tbody td+td+td+td a { background-image:url('bullet_blue.png');
+ background-position:left center;
+ background-repeat:no-repeat;
+ color:#03476F;
+ padding-left:15px;
+}
+tbody td+td+td+td a:visited { background-image:url('bullet_white.png');
+ background-position:left center;
+ background-repeat:no-repeat;
+}
+tbody th, tbody td { text-align:left;
+ vertical-align:top;
+}
+tfoot td { background:#5C443A;
+ color:#FFFFFF;
+ padding-top:3px;
+}
+.odd { background:#fff;
+}
+tbody tr:hover { background:#99BCBF;
+ border:1px solid #03476F;
+ color:#000000;
 }
             </style>
             </head>
             """ % about
 
-            response +=   "<body>\n<h1>%s</h1>\n" % about
+            response +=   "<body>\n<h2>%s</h2>\n" % about
             sparql_obj = semantic_resource_map.get_resource(requested_path)
-            
+
+            response += "<div>\n"
             response += "<table>\n"
+            response += "<tr><th>predicate</th><th>object<td></th></tr>\n"
             for row in sparql_obj:
                 response += "<tr><td>"
                 response += "%s</td><td>" % row["predicate"]["value"]
@@ -137,6 +166,23 @@ padding:5px;
                 response += "</td></tr>\n"
                 
             response += "</table>\n"
+
+            reverse_sparql_obj = semantic_resource_map.get_reverse_resource(requested_path)
+
+            response += "<br/>\n"
+
+            response += "<table>\n"
+            response += "<tr><th>predicate</th><th>subject<td></th></tr>\n"
+            for row in reverse_sparql_obj:
+                response += "<tr>"
+                response += "<td>%s</td>" % row["predicate"]["value"]
+                response += "</td><td>"
+                response += '<a href="%s">%s</a>' % (row["subject"]["value"],row["subject"]["value"])
+                response += "</td></tr>\n"
+            response += "</table>\n<br/>\n"
+            response += "<footer>Served by Spyder-web</footer>"
+            response += "</div>"
+
             response += "</body></html>"
         else:
             status = "404 Not Found"

@@ -28,6 +28,9 @@ class SemanticServerConnection(object):
     def predicate_resource_string(self,uri):
         return "select ?predicate ?object {<%s> ?predicate ?object}" % uri
 
+    def reverse_predicate_resource_string(self, uri):
+        return "select ?subject ?predicate {?subject ?predicate <%s>  .}" % uri
+
 class SparqlEndPointConnection(SemanticServerConnection):
     """Handle connection to a sparql server"""
     
@@ -86,4 +89,17 @@ class SemanticResourceMapping(object):
             return self.resource_map[full_uri]
         else:
             return 0
-    
+
+    def get_reverse_resource(self, path_request):
+        full_uri = self.full_uri(path_request)
+        if self.limit:
+            limit_string = "limit %s" % self.limit
+        else:
+            limit_string = ""
+        print(self.semantic_obj.reverse_predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
+        sparql_result = self.semantic_obj.query(self.semantic_obj.reverse_predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
+
+        if len(sparql_result) == 0:
+            return 0
+        else:
+            return sparql_result
