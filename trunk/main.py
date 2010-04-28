@@ -1,11 +1,7 @@
-import os
 #! /usr/bin/python
+import os
 
-# To change this template, choose Tools | Templates
-# and open the template in the editor.
-
-
-__author__="janos"
+__author__="risk.limits"
 __date__ ="$Apr 16, 2010 9:33:17 PM$"
 
 #from cgi import parse_qs, escape
@@ -80,7 +76,51 @@ def main(environ, start_response):
             #response = """<?xml version="1.0" encoding="UTF-8"?>"""
             #response += """<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
             response="""<html>
-            <head><title>%s</title></head>
+            <head><title>%s</title>
+            <style>
+            /*
+	Web20 Table Style
+	written by Netway Media, http://www.netway-media.com
+*/
+table {
+  border-collapse: collapse;
+  border: 1px solid #666666;
+  font: normal 11px verdana, arial, helvetica, sans-serif;
+  color: #363636;
+  background: #f6f6f6;
+  text-align:left;
+  }
+caption {
+  text-align: center;
+  font: bold 16px arial, helvetica, sans-serif;
+  background: transparent;
+  padding:6px 4px 8px 0px;
+  color: #CC00FF;
+  text-transform: uppercase;
+}
+thead, tfoot {
+background:url(bg1.png) repeat-x;
+text-align:left;
+height:30px;
+}
+thead th, tfoot th {
+padding:5px;
+}
+table a {
+color: #333333;
+text-decoration:none;
+}
+table a:hover {
+text-decoration:underline;
+}
+tr.odd {
+background: #f1f1f1;
+}
+tbody th, tbody td {
+padding:5px;
+}
+            </style>
+            </head>
             """ % about
 
             response +=   "<body>\n<h1>%s</h1>\n" % about
