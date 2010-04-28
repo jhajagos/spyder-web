@@ -96,7 +96,6 @@ class SemanticResourceMapping(object):
             limit_string = "limit %s" % self.limit
         else:
             limit_string = ""
-        print(self.semantic_obj.reverse_predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
         sparql_result = self.semantic_obj.query(self.semantic_obj.reverse_predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
 
         if len(sparql_result) == 0:
