@@ -173,12 +173,13 @@ tbody tr:hover { background:#99BCBF;
 
             response += "<table>\n"
             response += "<tr><th>predicate</th><th>subject<td></th></tr>\n"
-            for row in reverse_sparql_obj:
-                response += "<tr>"
-                response += "<td>%s</td>" % row["predicate"]["value"]
-                response += "</td><td>"
-                response += '<a href="%s">%s</a>' % (row["subject"]["value"],row["subject"]["value"])
-                response += "</td></tr>\n"
+            if reverse_sparql_obj:
+                for row in reverse_sparql_obj:
+                    response += "<tr>"
+                    response += "<td>%s</td>" % row["predicate"]["value"]
+                    response += "</td><td>"
+                    response += '<a href="%s">%s</a>' % (row["subject"]["value"],row["subject"]["value"])
+                    response += "</td></tr>\n"
             response += "</table>\n<br/>\n"
             response += "<footer>Served by Spyder-web</footer>"
             response += "</div>"
