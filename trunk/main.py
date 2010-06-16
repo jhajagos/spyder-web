@@ -65,7 +65,7 @@ def main(environ, start_response):
 
         semantic_resource_map = SemanticResourceMapping(semantic_server,uri_to_map,default_graph)
         requested_path = environ["PATH_INFO"]
-        found_uri = semantic_resource_map.find_resource(requested_path)
+        found_uri = semantic_resource_map.find_resource_path(requested_path)
 
         if found_uri:
             status = "200 Ok"

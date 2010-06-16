@@ -5,6 +5,7 @@ import unittest
 import sys
 sys.path.append("../")
 import json
+from pprint import pprint
 
 from semantic_resource_mapping import *
 
@@ -45,12 +46,27 @@ class  TestSpyderWebTestCase(unittest.TestCase):
         self.semantic_resource_map = SemanticResourceMapping(semantic_connection,"http://dbpedia.org")
 
     def test_resource_mapping(self):
-        found = self.semantic_resource_map.find_resource("/resource/Aspirin")
+        found = self.semantic_resource_map.find_resource_path("/resource/Aspirin")
         self.assertEquals(1,found,"Resource exists in dpedia")
-        not_found = self.semantic_resource_map.find_resource("/resource/MythicalMedicineForThe1950s")
+        not_found = self.semantic_resource_map.find_resource_path("/resource/MythicalMedicineForThe1950s")
         self.assertEquals(0,not_found,"This resource should not exist on dbPedia!")
 
+class TestSemanticResourceFactory(unittest.TestCase):
+    def setUp(self):
+        self.semantic_connection =  VirtuosoSparqlEndPointConnection("http://dbpedia.org/sparql")
+        
+    def test_resource_factory(self):
+        semantic_resource_factory = SemanticResourceObjectFactory(self.semantic_connection)
+        aspirin_resource = semantic_resource_factory.create_resource("http://dbpedia.org/resource/Aspirin")
+#        print(aspirin_resource.predicates())
+#        print(aspirin_resource.links)
 
+        aspirin_subject = aspirin_resource.get_link("skos:subject")
+        pprint(aspirin_subject)
+        pprint(aspirin_subject[0].predicates())
+        pprint(aspirin_subject[0].links)
+        pprint(aspirin_subject[0].predicates_to())
+        pprint(aspirin_subject[0].links_to)
 if __name__ == '__main__':
     unittest.main()
 
