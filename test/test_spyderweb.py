@@ -62,11 +62,17 @@ class TestSemanticResourceFactory(unittest.TestCase):
 #        print(aspirin_resource.links)
 
         aspirin_subject = aspirin_resource.get_link("skos:subject")
-        pprint(aspirin_subject)
         pprint(aspirin_subject[0].predicates())
-        pprint(aspirin_subject[0].links)
-        pprint(aspirin_subject[0].predicates_to())
-        pprint(aspirin_subject[0].links_to)
+        pprint(aspirin_subject[0]["-> rdf:type"])
+
+#        pprint(aspirin_subject)
+#        pprint(aspirin_subject[0].predicates())
+#        pprint(aspirin_subject[0].links)
+#        pprint(aspirin_subject[0].predicates_to())
+#        pprint(aspirin_subject[0].links_to)
+#
+
+        
 if __name__ == '__main__':
     unittest.main()
 
