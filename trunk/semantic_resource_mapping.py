@@ -226,12 +226,26 @@ class SemanticResourceObject(object):
         return self.links_to[uri]
         
     def __getitem__(self,item):
-        """-> foaf:givenName
+        """
+        -> ?
+        <- ?
+        -> foaf:givenName
         foaf:givenName
         <- foaf:Group
         http://link.informatics.stonybrook.edu/rxnorm/RXAUI/
         """
 
+        if item.strip() == "-> ?":
+            return self.predicates()
+        elif item.strip() == "<- ?":
+            return self.predicates_to()
+        elif item[0:2] == "->":
+            return self.get_link(item[2:].strip())
+        elif item[0:2] == "<-":
+            return self.get_link_to(item[2:].strip())
+        else:
+            return self.get_link(item)
+        
     def predicates(self):
         "Returns a list of predicates"
         if not(self.links_cached):
