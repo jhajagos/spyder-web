@@ -212,6 +212,7 @@ class SemanticResourceObject(object):
                     self.links_to[predicate_uri] = self._get_resource_from_sparql_result(row,"subject")
 
     def get_link(self,uri):
+        "For a resource given the predicate uri gets the object"
         uri = self.expand_uri(uri)
         if not(self.links_cached):
             self.find_links()
@@ -219,6 +220,7 @@ class SemanticResourceObject(object):
         return self.links[uri]
 
     def get_link_to(self,uri):
+        "For a resource given the predicate uri that links to get the subject"
         uri = self.expand_uri(uri)
         if not(self.links_to_cached):
             self.find_links_to()
