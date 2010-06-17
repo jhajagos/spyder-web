@@ -239,6 +239,12 @@ class SemanticResourceObject(object):
             return self.predicates()
         elif item.strip() == "<- ?":
             return self.predicates_to()
+        elif item.strip() == "-> ??":
+            self.find_links()
+            return self.links
+        elif item.strip() == "<- ??":
+            self.find_links_to()
+            return self.links_to
         elif item[0:2] == "->":
             return self.get_link(item[2:].strip())
         elif item[0:2] == "<-":
