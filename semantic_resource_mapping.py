@@ -57,65 +57,35 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
             return SparqlResult(result)
         else:
             raise IOError
-
-class SemanticResourceMapping(object):
-    "Handles mapping of a reasource from a HTTP request to the uri in the web server"
-    def __init__(self, semantic_connection_obj, uri_base_map, default_graph=None,limit=1000):
-        self.semantic_obj = semantic_connection_obj
-        self.uri_base_map = uri_base_map
-        self.default_graph = default_graph
-        self.limit = limit
-        self.resource_map = {} #Resource caches
-
-    def find_resource_path(self,path_request):
-        full_uri = self.full_uri_expansion(path_request)
-        return self.find_resource(full_uri)
-
-    def find_resource(self,path_request):
-        if self.limit:
-            limit_string = "limit %s" % self.limit
-        else:
-            limit_string = ""
-
-        sparql_result = self.semantic_obj.query(self.semantic_obj.predicate_resource_string(path_request) + " "  + limit_string,self.default_graph)
-        
-        if len(sparql_result) == 0:
-            return 0
-        else:
-            self.resource_map[path_request] = sparql_result
-            return 1
-
-    def full_uri_expansion(self,path_request):
-        "Transform a path to a full"
-        return self.uri_base_map + path_request
-
-    def get_resource(self,path_request):
-        full_uri = self.full_uri_expansion(path_request)
-        if self.resource_map.has_key(full_uri):
-            return self.resource_map[full_uri]
-        else:
-            return 0
-
-    def get_reverse_resource(self, path_request):
-        full_uri = self.full_uri_expansion(path_request)
-        if self.limit:
-            limit_string = "limit %s" % self.limit
-        else:
-            limit_string = ""
-        sparql_result = self.semantic_obj.query(self.semantic_obj.reverse_predicate_resource_string(full_uri) + " "  + limit_string,self.default_graph)
-
-        if len(sparql_result) == 0:
-            return 0
-        else:
-            return sparql_result
-
+    
 class BlankSemanticResourceObject(object):
+    """A Null Object Pattern for a semantic resource that does not exist"""
     def __init__(self):
         pass
     def __getitem__(self,item):
         return BlankSemanticResourceObject()
     def __repr__(self):
         return ""
+
+class LiteralResourceObject(object):
+    """Encapsulates a literal object because of language issus a pure Python representation cannot be used"""
+    def __init__(self,literal_value,literal_language=None, literal_type="xsd:string"):
+        self.literal_value = literal_value
+        self.literal_language = literal_language
+        self.literal_type = literal_type
+
+    def __getitem__(self,index):
+        self.literal_value[index]
+
+    def __len__(self):
+        return len(self.literal_value)
+
+    def __repr__(self):
+        if self.literal_language is not None:
+            literal_language_string = u"@%s" % self.literal_language
+        else:
+            literal_language_string = ""
+        return repr(unicode(self.literal_value)) + literal_language_string
 
 
 class SemanticResourceObject(object):
@@ -137,11 +107,27 @@ class SemanticResourceObject(object):
         self.links_to = {} #Dictionary for hodling link_to the semantic resource
 
     def _get_resource_from_sparql_result(self,sparql_row,field_name="object"):
+        "See http://www.w3.org/TR/rdf-sparql-json-res/ for Json Spec"
+
         resource_object = sparql_row[field_name]
         if resource_object["type"] == "uri":
             return self.semantic_resource_factory.create_resource(resource_object["value"])
         else:
-            return resource_object["value"] # Right now we return the value we lose the language aspect of the tag
+            if resource_object["type"] == "literal" or resource_object["type"] == "typed_literal":
+                if resource_object.has_key("xml:lang"):
+                    literal_language = resource_object["xml:lang"]
+                else:
+                    literal_language = None
+                    
+                if resource_object.has_key("datatype"):
+                    literal_datatype = resource_object["datatype"]
+                else:
+                    literal_datatype = None
+
+                return LiteralResourceObject(resource_object["value"],literal_language, literal_datatype)
+            
+            else:
+                return resource_object["value"]
 
     def expand_uri(self,uri_to_expand):
         "Expands uri prefix when the namespace of the prefix is registered"
@@ -212,6 +198,21 @@ class SemanticResourceObject(object):
             else:
                 return BlankSemanticResourceObject()
 
+    def get_link_with_language(self, uri, language):
+        links = self.get_link(uri)
+        if links:
+            if type(links) == type([]):
+                for link in links:
+                    if type(link) == LiteralResourceObject:
+                        if link.literal_language == language:
+                            return link.literal_value
+                return links
+
+            else: # in case of a single resource the language is ignored
+                resources
+        else:
+            return 0
+
     def get_link_to(self,uri):
         "For a resource given the predicate uri that links to get the subject"
         uri = self.expand_uri(uri)
@@ -234,6 +235,7 @@ class SemanticResourceObject(object):
         foaf:givenName
         <- foaf:Group
         http://link.informatics.stonybrook.edu/rxnorm/RXAUI/
+        -> rdfs:label @en
         """
 
         if item.strip() == "-> ?":
@@ -247,7 +249,12 @@ class SemanticResourceObject(object):
             self.find_links_to()
             return self.links_to
         elif item[0:2] == "->":
-            return self.get_link(item[2:].strip())
+            split_item = item.split()
+            if len(split_item) <= 2:
+                return self.get_link(item[2:].strip())
+            else:
+                return self.get_link_with_language(split_item[1],split_item[2][1:])
+            
         elif item[0:2] == "<-":
             return self.get_link_to(item[2:].strip())
         else:
@@ -272,13 +279,14 @@ class SemanticResourceObject(object):
 
 class SemanticResourceObjectFactory(object):
     "Creates, caches, parameterizes, and returns a uri which is stored in a triple store"
-    def __init__(self,semantic_connection_obj, default_graph=None,namespaces={},throw_error_missing_predicate=1):
+    def __init__(self,semantic_connection_obj, default_graph=None,namespaces={},throw_error_missing_predicate=1,limit = 1000):
         self.semantic_connection_obj = semantic_connection_obj
         self.default_graph = default_graph
         self.throw_error_missing_predicate = throw_error_missing_predicate
         self.semantic_resource_cache = {}
         self.namespaces =  {"foaf": "http://xmlns.com/foaf/0.1/", "rdfs" : "http://www.w3.org/2000/01/rdf-schema#", "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#" , "owl" : "http://www.w3.org/2002/07/owl#",  "dc":"http://purl.org/dc/terms/", "skos":"http://www.w3.org/2004/02/skos/core#"}
-
+        self.limit = limit
+        
         for namespace in namespaces.items():
             self.namespaces[namespace[0]] = namespace[1]
         
@@ -287,6 +295,21 @@ class SemanticResourceObjectFactory(object):
         if self.semantic_resource_cache.has_key(uri):
             semantic_resource_object = self.semantic_resource_cache[uri]
         else:
-            semantic_resource_object = SemanticResourceObject(self.semantic_connection_obj, uri, self,  self.default_graph, self.namespaces,self.throw_error_missing_predicate)
+            semantic_resource_object = SemanticResourceObject(self.semantic_connection_obj, uri, self,  self.default_graph, self.namespaces,self.throw_error_missing_predicate,self.limit)
             self.semantic_resource_cache[uri] = semantic_resource_object
         return semantic_resource_object
+
+class SemanticResourceMapping(object):
+    "Handles mapping of a reasource from a HTTP request to the uri in the web server"
+    
+    def __init__(self, semantic_connection_obj, uri_base_map, default_graph=None,throw_error_missing_predicate=1,limit=1000):
+        self.uri_base_map = uri_base_map
+        self.semantic_object_factory = SemanticResourceObjectFactory(semantic_connection_obj,default_graph,{},throw_error_missing_predicate,limit)
+
+    def find_resource_path(self,path_request):
+        full_uri = self.full_uri_expansion(path_request)
+        return self.semantic_object_factory.create_resource(full_uri)
+
+    def full_uri_expansion(self,path_request):
+        "Transform a path to a full"
+        return self.uri_base_map + path_request

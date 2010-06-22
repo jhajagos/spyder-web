@@ -4,15 +4,8 @@ import os
 __author__="risk.limits"
 __date__ ="$Apr 16, 2010 9:33:17 PM$"
 
-#from cgi import parse_qs, escape
-#from genshi.template import TemplateLoader
-#from pprint import pprint
-
 from semantic_resource_mapping import *
-from pprint import pprint
 import os
-#import re
-#from string import join
 
 def test_application(environ, start_response):
     environ["SPYDER_WEB_CONFIG_INSTANCE"] = "rxnorm_configuration.json"
@@ -71,116 +64,161 @@ def main(environ, start_response):
             status = "200 Ok"
             headers = [('Content-type', 'text/html')]
 
-            about = "About: " + uri_to_map + requested_path
+            try:
+                label = found_uri["rdfs:label"]
+
+                if len(label):
+                    label = " (%s)" % str(label.literal_value)
+                else:
+                    label = ""
+            except:
+                label = ""
+
+            about = "About: " + uri_to_map + requested_path + label
+            css = """
+          /* Greyscale
+Table Design by Scott Boyle, Two Plus Four
+www.twoplusfour.co.uk
+----------------------------------------------- */
+
+table {border-collapse: collapse;
+border: 2px solid #000;
+font: normal 80%/140% arial, helvetica, sans-serif;
+color: #555;
+background: #fff;}
+
+td, th {border: 1px dotted #bbb;
+padding: .5em;}
+
+caption {padding: 0 0 .5em 0;
+text-align: left;
+font-size: 1.4em;
+font-weight: bold;
+text-transform: uppercase;
+color: #333;
+background: transparent;}
+
+/* =links
+----------------------------------------------- */
+
+table a {padding: 1px;
+text-decoration: none;
+font-weight: bold;
+background: transparent;}
+
+table a:link {border-bottom: 1px dashed #ddd;
+color: #000;}
+
+table a:visited {border-bottom: 1px dashed #ccc;
+text-decoration: line-through;
+color: #808080;}
+
+table a:hover {border-bottom: 1px dashed #bbb;
+color: #666;}
+
+/* =head =foot
+----------------------------------------------- */
+
+thead th, tfoot th {border: 2px solid #000;
+text-align: left;
+font-size: 1.2em;
+font-weight: bold;
+color: #333;
+background: transparent;}
+
+tfoot td {border: 2px solid #000;}
+
+/* =body
+----------------------------------------------- */
+
+tbody th, tbody td {vertical-align: top;
+text-align: left;}
+
+tbody th {white-space: nowrap;}
+
+.odd {background: #fcfcfc;}
+
+tbody tr:hover {background: #fafafa;}
+
+            """
+
 
             #response = """<?xml version="1.0" encoding="UTF-8"?>"""
             #response += """<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
             response="""<html>
             <head><title>%s</title>
             <style>
-/*
-	Blue Dream
-	Written by Teylor Feliz  http://www.admixweb.com
-*/
-
-
-table { background:#D3E4E5;
- border:1px solid gray;
- border-collapse:collapse;
- color:#fff;
- font:normal 12px verdana, arial, helvetica, sans-serif;
-}
-caption { border:1px solid #5C443A;
- color:#5C443A;
- font-weight:bold;
- letter-spacing:20px;
- padding:6px 4px 8px 0px;
- text-align:center;
- text-transform:uppercase;
-}
-td, th { color:#363636;
- padding:.4em;
-}
-tr { border:1px dotted gray;
-}
-thead th, tfoot th { background:#5C443A;
- color:#FFFFFF;
- padding:3px 10px 3px 10px;
- text-align:left;
- text-transform:uppercase;
-}
-tbody td a { color:#363636;
- text-decoration:none;
-}
-tbody td a:visited { color:gray;
- text-decoration:line-through;
-}
-tbody td a:hover { text-decoration:underline;
-}
-tbody th a { color:#363636;
- font-weight:normal;
- text-decoration:none;
-}
-tbody th a:hover { color:#363636;
-}
-tbody td+td+td+td a { background-image:url('bullet_blue.png');
- background-position:left center;
- background-repeat:no-repeat;
- color:#03476F;
- padding-left:15px;
-}
-tbody td+td+td+td a:visited { background-image:url('bullet_white.png');
- background-position:left center;
- background-repeat:no-repeat;
-}
-tbody th, tbody td { text-align:left;
- vertical-align:top;
-}
-tfoot td { background:#5C443A;
- color:#FFFFFF;
- padding-top:3px;
-}
-.odd { background:#fff;
-}
-tbody tr:hover { background:#99BCBF;
- border:1px solid #03476F;
- color:#000000;
-}
+                %s
             </style>
             </head>
-            """ % about
+            """ % (about,css)
 
             response +=   "<body>\n<h2>%s</h2>\n" % about
-            sparql_obj = semantic_resource_map.get_resource(requested_path)
-
+            
             response += "<div>\n"
             response += "<table>\n"
             response += "<tr><th>predicate</th><th>object<td></th></tr>\n"
-            for row in sparql_obj:
+            for uri in found_uri["-> ?"]:
                 response += "<tr><td>"
-                response += "%s</td><td>" % row["predicate"]["value"]
-                if row["object"]["type"] == "uri":
-                    response += '<a href="%s">%s</a>' % (row["object"]["value"],row["object"]["value"])
-                else:
-                    response += "%s" % row["object"]["value"]
+                response += "%s</td><td>" % uri
+
+                links = found_uri["-> %s" % uri]
+                if type(links) != type([]):
+                    links = [links]
+
+                if len(links) > 1:
+                    response += "<ul>"
+
+                for link in links:
+                    if len(links) > 1:
+                        response += "<li>"
+                    if type(link) == SemanticResourceObject:
+                        response += '<a href="%s">%s</a>' % (link.uri,link.uri)
+                    else:
+                        response += "%s" % link.literal_value
+
+                    if len(links) > 1:
+                        response += "</li>"
+
+                if len(links) > 1:
+                    response += "</ul>"
                 response += "</td></tr>\n"
                 
             response += "</table>\n"
 
-            reverse_sparql_obj = semantic_resource_map.get_reverse_resource(requested_path)
+            links_to = found_uri["<- ?"]
 
             response += "<br/>\n"
-
             response += "<table>\n"
             response += "<tr><th>predicate</th><th>subject<td></th></tr>\n"
-            if reverse_sparql_obj:
-                for row in reverse_sparql_obj:
-                    response += "<tr>"
-                    response += "<td>%s</td>" % row["predicate"]["value"]
-                    response += "</td><td>"
-                    response += '<a href="%s">%s</a>' % (row["subject"]["value"],row["subject"]["value"])
-                    response += "</td></tr>\n"
+            
+            for link_to in links_to:
+                response += "<tr>"
+                response += "<td>%s</td>" % link_to
+
+                objects_linked_to = found_uri["<- %s" % link_to]
+
+                if type(objects_linked_to) != type([]):
+                    objects_linked_to = [objects_linked_to]
+
+                response += "<td>"
+                if len(objects_linked_to) > 1:
+                    response += "<ul>"
+                for object_linked_to in objects_linked_to:
+                    if len(objects_linked_to) > 1:
+                        response += "<li>"
+
+                    response += '<a href="%s">%s</a>' % (object_linked_to.uri,object_linked_to.uri)
+
+                    if len(objects_linked_to) > 1:
+                        response += "</li>"
+
+                if len(objects_linked_to) > 1:
+                    response += "</ul>"
+
+                response += "</td></tr>\n"
             response += "</table>\n<br/>\n"
+
             response += "<footer>Served by Spyder-web</footer>"
             response += "</div>"
 
