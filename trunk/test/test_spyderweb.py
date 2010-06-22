@@ -59,6 +59,8 @@ class TestSemanticResourceFactory(unittest.TestCase):
         semantic_resource_factory = SemanticResourceObjectFactory(self.semantic_connection)
         aspirin_resource = semantic_resource_factory.create_resource("http://dbpedia.org/resource/Aspirin")
 
+        print(aspirin_resource["-> rdfs:label"])
+
         self.assertTrue(len(aspirin_resource["-> ?"]) > 0)
         self.assertTrue(len(aspirin_resource["<- ?"]) > 0)
 
@@ -66,6 +68,8 @@ class TestSemanticResourceFactory(unittest.TestCase):
         
         self.assertTrue(aspirin_subject[0]["-> rdf:type"])
 
+        self.assertEquals("Aspirin", aspirin_resource["-> rdfs:label @en"])
+        
     def test_resource_factory_with_no_errors(self):
         semantic_resource_factory = SemanticResourceObjectFactory(self.semantic_connection,throw_error_missing_predicate=0)
         aspirin_resource = semantic_resource_factory.create_resource("http://dbpedia.org/resource/Aspirin")
