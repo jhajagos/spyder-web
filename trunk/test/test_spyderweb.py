@@ -58,21 +58,25 @@ class TestSemanticResourceFactory(unittest.TestCase):
     def test_resource_factory(self):
         semantic_resource_factory = SemanticResourceObjectFactory(self.semantic_connection)
         aspirin_resource = semantic_resource_factory.create_resource("http://dbpedia.org/resource/Aspirin")
-#        print(aspirin_resource.predicates())
-#        print(aspirin_resource.links)
+
+        self.assertTrue(len(aspirin_resource["-> ?"]) > 0)
+        self.assertTrue(len(aspirin_resource["<- ?"]) > 0)
 
         aspirin_subject = aspirin_resource.get_link("skos:subject")
-        pprint(aspirin_subject[0].predicates())
-        pprint(aspirin_subject[0]["-> rdf:type"])
-
-#        pprint(aspirin_subject)
-#        pprint(aspirin_subject[0].predicates())
-#        pprint(aspirin_subject[0].links)
-#        pprint(aspirin_subject[0].predicates_to())
-#        pprint(aspirin_subject[0].links_to)
-#
-
         
+        self.assertTrue(aspirin_subject[0]["-> rdf:type"])
+
+    def test_resource_factory_with_no_errors(self):
+        semantic_resource_factory = SemanticResourceObjectFactory(self.semantic_connection,throw_error_missing_predicate=0)
+        aspirin_resource = semantic_resource_factory.create_resource("http://dbpedia.org/resource/Aspirin")
+
+        self.assertTrue(len(aspirin_resource["-> rdf:type"]) > 0)
+        
+        self.assertEquals("",str(aspirin_resource["foaf:knows"]))
+        self.assertEquals("",str(aspirin_resource["foaf:knows"]["rdfs:label"]))
+
+        self.assertEquals("",str(aspirin_resource["<- foaf:group"]["rdfs:label"]))
+
 if __name__ == '__main__':
     unittest.main()
 

@@ -109,38 +109,24 @@ class SemanticResourceMapping(object):
         else:
             return sparql_result
 
-class SemanticResourceObjectCollection(object):
-    def __init__(self,semantic_resource_list):
-        self.semantic_resource_list = semantic_resource_list
-
-    def append(self, semantic_resource_object):
-        self.semantic_resource_list.append(semantic_resource_object)
-
-    def sort(self, property="uri", order=1):
+class BlankSemanticResourceObject(object):
+    def __init__(self):
         pass
-
-    def __len__(self):
-        return len(self.semantic_resource_list)
-
+    def __getitem__(self,item):
+        return BlankSemanticResourceObject()
     def __repr__(self):
-        string_representation = "["
-        i = 0
-        for semantic_resource in self.semantic_resource_list:
-            if i > 0:
-                string_representation += ", "
-            string_representation += str(semantic_resource)
-            i=1
-        string_representation += "]"
-        return string_representation
+        return ""
+
 
 class SemanticResourceObject(object):
     "Encapsulates a resource a uri in a triple store"
-    def __init__(self,semantic_connection_obj, uri, semantic_resource_factory, graph_uri = None, namespaces = None,limit=1000):
+    def __init__(self,semantic_connection_obj, uri, semantic_resource_factory, graph_uri = None, namespaces = None, throw_error_missing_predicate=1, limit=1000):
         self.graph_uri = graph_uri
         self.semantic_connection_obj = semantic_connection_obj
         self.visited_properties = {}
         self.namespaces = namespaces
         self.semantic_resource_factory = semantic_resource_factory
+        self.throw_error_missing_predicate = throw_error_missing_predicate
         self.limit = limit
         self.uri = uri
 
@@ -217,7 +203,14 @@ class SemanticResourceObject(object):
         if not(self.links_cached):
             self.find_links()
             self.links_cached = 1
-        return self.links[uri]
+
+        if self.throw_error_missing_predicate:
+            return self.links[uri]
+        else:
+            if self.links.has_key(uri):
+                return self.links[uri]
+            else:
+                return BlankSemanticResourceObject()
 
     def get_link_to(self,uri):
         "For a resource given the predicate uri that links to get the subject"
@@ -225,7 +218,13 @@ class SemanticResourceObject(object):
         if not(self.links_to_cached):
             self.find_links_to()
             self.links_to_cached = 1
-        return self.links_to[uri]
+        if self.throw_error_missing_predicate:
+            return self.links_to[uri]
+        else:
+            if self.links_to.has_key(uri):
+                return self.links_to[uri]
+            else:
+                return BlankSemanticResourceObject()
         
     def __getitem__(self,item):
         """
@@ -273,10 +272,10 @@ class SemanticResourceObject(object):
 
 class SemanticResourceObjectFactory(object):
     "Creates, caches, parameterizes, and returns a uri which is stored in a triple store"
-    def __init__(self,semantic_connection_obj, default_graph=None,namespaces={}):
+    def __init__(self,semantic_connection_obj, default_graph=None,namespaces={},throw_error_missing_predicate=1):
         self.semantic_connection_obj = semantic_connection_obj
         self.default_graph = default_graph
-
+        self.throw_error_missing_predicate = throw_error_missing_predicate
         self.semantic_resource_cache = {}
         self.namespaces =  {"foaf": "http://xmlns.com/foaf/0.1/", "rdfs" : "http://www.w3.org/2000/01/rdf-schema#", "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#" , "owl" : "http://www.w3.org/2002/07/owl#",  "dc":"http://purl.org/dc/terms/", "skos":"http://www.w3.org/2004/02/skos/core#"}
 
@@ -288,6 +287,6 @@ class SemanticResourceObjectFactory(object):
         if self.semantic_resource_cache.has_key(uri):
             semantic_resource_object = self.semantic_resource_cache[uri]
         else:
-            semantic_resource_object = SemanticResourceObject(self.semantic_connection_obj, uri, self,  self.default_graph, self.namespaces)
+            semantic_resource_object = SemanticResourceObject(self.semantic_connection_obj, uri, self,  self.default_graph, self.namespaces,self.throw_error_missing_predicate)
             self.semantic_resource_cache[uri] = semantic_resource_object
         return semantic_resource_object
