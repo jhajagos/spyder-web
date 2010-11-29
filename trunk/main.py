@@ -49,16 +49,20 @@ def main(environ, start_response):
         else:
             default_graph = None
 
-        if config.has_key("footer_to_include"):
-            footer_to_include = config["footer_to_include"]
-        else:
-            footer_to_include = ""
-
         if config.has_key("header_to_include"):
             header_to_include = config["header_to_include"]
         else:
             header_to_include = ""
 
+        if config.has_key("after_header_to_include"):
+            after_header_to_include = config["after_header_to_include"]
+        else:
+            after_header_to_include = ""
+
+        if config.has_key("footer_to_include"):
+            footer_to_include = config["footer_to_include"]
+        else:
+            footer_to_include = ""
 
     else:
         Errors["NoConfigurationInstance"] = "No configuration instance found please set os.environ['SpyderWebConfigInstance'] = '/var/web/rxnorm/config.json'"
@@ -95,7 +99,7 @@ def main(environ, start_response):
             except:
                 label = ""
 
-            about = "About: " + uri_to_map + requested_path + label
+            about = "About: " + uri_object.uri + label
             css = """
           /* Greyscale
 Table Design by Scott Boyle, Two Plus Four
@@ -173,7 +177,7 @@ tbody tr:hover {background: #fafafa;}
             </head>
             """ % (about,css,header_to_include)
 
-            response +=   "<body>\n<h2>%s</h2>\n" % about
+            response +=   "<body>%s\n<h2>%s</h2>\n" % (after_header_to_include,about)
             
             response += "<div>\n"
             response += "<table>\n"
