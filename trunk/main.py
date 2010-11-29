@@ -70,6 +70,11 @@ def main(environ, start_response):
         else:
             footer_to_include = ""
 
+        if config.has_key("metadata_uri"):
+            metadata_uri = config("metadata_uri")
+        else:
+            metadata_uri = None
+
     else:
         Errors["NoConfigurationInstance"] = "No configuration instance found please set os.environ['SpyderWebConfigInstance'] = '/var/web/rxnorm/config.json'"
 
@@ -276,7 +281,14 @@ tbody tr:hover {background: #fafafa;}
             response += """Alternative represenations of the resource: <a href="%s">ntriples</a> | <a href="%s">rdf+xml</a>
             """ % (uri_object.get_machine_readable_representation_uri("text/plain",public_semantic_server_address),uri_object.get_machine_readable_representation_uri("application/rdf+xml",public_semantic_server_address))
 
-            response += '|| <a href="%s">SPARQL Endpoint</a> | graph: <a href="%s">%s</a>' % (public_semantic_server_address, default_graph,default_graph)
+            response += "<div>"
+            response += '<a href="%s">SPARQL Endpoint</a> | graph: <a href="%s">%s</a>' % (public_semantic_server_address, default_graph,default_graph)
+            response += "</div>"
+            if metadata_uri:
+                response += "<div>"
+                response += 'Metadata about this published resource: <a href="%s">%s</a> |' % (metadata_uri,metadata_uri)
+                response += "</div>"
+
 
             response += "</div>"
             response += "<br/>"
@@ -291,7 +303,7 @@ tbody tr:hover {background: #fafafa;}
         if not(uri_exists):
             status = "404 Not Found"
             headers = [('Content-type', 'text/plain')]
-            response = "Not found: " + uri_request.uri
+            response = "Not found: " + uri_object.uri
             
     start_response(status, headers)
     return [str(response),]
