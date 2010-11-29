@@ -10,11 +10,12 @@ from string import join
 
 class SparqlResult(object):
     "Encapsulates a SPARQL result"
-    def __init__(self,raw_sparql_result,type="json"):
-        self.raw_sparql_result = raw_sparql_result
+    def __init__(self,raw_sparql_result,response_type="json"):
 
-        self.variables = self.raw_sparql_result["head"]["vars"]
-        self.raw_result = self.raw_sparql_result["results"]["bindings"]
+        if response_type == "json":
+            self.raw_sparql_result = raw_sparql_result
+            self.variables = self.raw_sparql_result["head"]["vars"]
+            self.raw_result = self.raw_sparql_result["results"]["bindings"]
         
     def __len__(self):
         return len(self.raw_result)
@@ -34,6 +35,12 @@ class SemanticServerConnection(object):
     def reverse_predicate_resource_string(self, uri):
         return "select ?subject ?predicate {?subject ?predicate <%s>  .}" % uri
 
+    def ask_subject(self,uri):
+        return "ask {<%s> ?p ?o}" % uri
+
+    def ask_predicate(self, uri):
+        return "ask {?s ?p <%s>}" % uri
+
 class SparqlEndPointConnection(SemanticServerConnection):
     """Handle connection to a sparql server"""
     
@@ -45,7 +52,7 @@ class SparqlEndPointConnection(SemanticServerConnection):
 class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
     "Connect to a Virtuoso Sparql Endpoint"
     
-    def query(self,query_string,default_graph):
+    def query(self,query_string,default_graph, raw_response=False):
         "Perform a SPARQL query"
         query_hash = {"query":query_string}
         if default_graph is not None:
@@ -54,7 +61,10 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
         rest_client = RestClient(self.sparql_endpoint_address,{"accept":"application/json"})
         (response,result) = rest_client.get(rest_client.encode_query_string(query_hash))
         if response["status"] == "200":
-            return SparqlResult(result)
+            if raw_response:
+                return result
+            else:
+                return SparqlResult(result)
         else:
             raise IOError
     
@@ -108,7 +118,7 @@ class SemanticResourceObject(object):
 
     def _get_resource_from_sparql_result(self,sparql_row,field_name="object"):
         "See http://www.w3.org/TR/rdf-sparql-json-res/ for Json Spec"
-
+        
         resource_object = sparql_row[field_name]
         if resource_object["type"] == "uri":
             return self.semantic_resource_factory.create_resource(resource_object["value"])
@@ -141,6 +151,15 @@ class SemanticResourceObject(object):
                     return uri_to_expand
         else:
             return uri_to_expand
+
+    def exists(self):
+        "Test if the resorce exists"
+        predicate_exists = self.semantic_connection_obj.query(self.semantic_connection_obj.ask_predicate(self.uri),self.graph_uri,True)[u"boolean"]
+        subject_exists = self.semantic_connection_obj.query(self.semantic_connection_obj.ask_subject(self.uri),self.graph_uri,True)[u"boolean"]
+        if subject_exists or predicate_exists:
+            return True
+        else:
+            return False
         
     def find_links(self):
         "Method gets data that this resource links to. In rdf this is where the resource is the subject of a triple."
@@ -253,8 +272,7 @@ class SemanticResourceObject(object):
             if len(split_item) <= 2:
                 return self.get_link(item[2:].strip())
             else:
-                return self.get_link_with_language(split_item[1],split_item[2][1:])
-            
+                return self.get_link_with_language(split_item[1],split_item[2][1:])    
         elif item[0:2] == "<-":
             return self.get_link_to(item[2:].strip())
         else:
@@ -297,6 +315,7 @@ class SemanticResourceObjectFactory(object):
         else:
             semantic_resource_object = SemanticResourceObject(self.semantic_connection_obj, uri, self,  self.default_graph, self.namespaces,self.throw_error_missing_predicate,self.limit)
             self.semantic_resource_cache[uri] = semantic_resource_object
+            
         return semantic_resource_object
 
 class SemanticResourceMapping(object):
@@ -310,6 +329,9 @@ class SemanticResourceMapping(object):
         full_uri = self.full_uri_expansion(path_request)
         return self.semantic_object_factory.create_resource(full_uri)
 
+    def find_resource(self,full_uri):
+        return self.semantic_object_factory.create_resource(full_uri)
+    
     def full_uri_expansion(self,path_request):
         "Transform a path to a full"
         return self.uri_base_map + path_request

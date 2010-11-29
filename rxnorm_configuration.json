@@ -1,6 +1,6 @@
 {
     "uri_to_map": "http://link.informatics.stonybrook.edu",
     "semantic_server_type": "VirtuosoSparqlEndPointConnection",
-    "semantic_server_address" : "http://localhost:8890/sparql",
-    "default_graph" : "http://janoshajagos.com#"
+    "semantic_server_address" : "http://link.informatics.stonybrook.edu/sparql/",
+    "default_graph" : "http://nlm.nih.gov/research/umls/rxnorm/"
 }

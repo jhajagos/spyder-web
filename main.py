@@ -1,5 +1,7 @@
 #! /usr/bin/python
 import os
+import urlparse
+import urllib2
 
 __author__="risk.limits"
 __date__ ="$Apr 16, 2010 9:33:17 PM$"
@@ -35,7 +37,7 @@ def main(environ, start_response):
                     sparql_endpoint_connection = config["semantic_server_address"]
                     semantic_server = VirtuosoSparqlEndPointConnection(sparql_endpoint_connection)
                 else:
-                    Errors["NoSparqlEndPoint"] = "There is no Sparql EndPoint Specified"
+                    Errors["NoSparqlEndPoint"] = "There is no Sparql End Point Specified"
             else:
                 Errors["NoSemanticServerType"] = "No semantic_server_type given in the configuration or invalid type given"
         if config.has_key("uri_to_map"):
@@ -47,6 +49,17 @@ def main(environ, start_response):
         else:
             default_graph = None
 
+        if config.has_key("footer_to_include"):
+            footer_to_include = config["footer_to_include"]
+        else:
+            footer_to_include = ""
+
+        if config.has_key("header_to_include"):
+            header_to_include = config["header_to_include"]
+        else:
+            header_to_include = ""
+
+
     else:
         Errors["NoConfigurationInstance"] = "No configuration instance found please set os.environ['SpyderWebConfigInstance'] = '/var/web/rxnorm/config.json'"
 
@@ -55,17 +68,25 @@ def main(environ, start_response):
         headers = [('Content-type', 'text/plain')]
         response = str(Errors)
     else:
-
+        query_dictionary = urlparse.parse_qs(environ["QUERY_STRING"])
         semantic_resource_map = SemanticResourceMapping(semantic_server,uri_to_map,default_graph)
         requested_path = environ["PATH_INFO"]
-        found_uri = semantic_resource_map.find_resource_path(requested_path)
+        uri_object = semantic_resource_map.find_resource_path(requested_path)
+        uri_exists = uri_object.exists()
+        if not(uri_exists):
+            if environ["QUERY_STRING"]: #Check the query string for a rewrite
+                if query_dictionary.has_key("uri"):
+                    uri_to_decode = query_dictionary["uri"][0]
+                    uri = urllib2.unquote(uri_to_decode)
+                    uri_object = semantic_resource_map.find_resource(uri)
+                    uri_exists = uri_object.exists()
 
-        if found_uri:
+        if uri_exists:
             status = "200 Ok"
             headers = [('Content-type', 'text/html')]
 
             try:
-                label = found_uri["rdfs:label"]
+                label = uri_object["rdfs:label"]
 
                 if len(label):
                     label = " (%s)" % str(label.literal_value)
@@ -139,30 +160,29 @@ tbody th {white-space: nowrap;}
 .odd {background: #fcfcfc;}
 
 tbody tr:hover {background: #fafafa;}
-
             """
 
-
-            #response = """<?xml version="1.0" encoding="UTF-8"?>"""
-            #response += """<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+            response = """<?xml version="1.0" encoding="UTF-8"?>"""
+            response += """<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">"""
             response="""<html>
             <head><title>%s</title>
             <style>
                 %s
             </style>
+            %s
             </head>
-            """ % (about,css)
+            """ % (about,css,header_to_include)
 
             response +=   "<body>\n<h2>%s</h2>\n" % about
             
             response += "<div>\n"
             response += "<table>\n"
             response += "<tr><th>predicate</th><th>object<td></th></tr>\n"
-            for uri in found_uri["-> ?"]:
+            for uri in uri_object["-> ?"]:
                 response += "<tr><td>"
                 response += "%s</td><td>" % uri
 
-                links = found_uri["-> %s" % uri]
+                links = uri_object["-> %s" % uri]
                 if type(links) != type([]):
                     links = [links]
 
@@ -186,7 +206,7 @@ tbody tr:hover {background: #fafafa;}
                 
             response += "</table>\n"
 
-            links_to = found_uri["<- ?"]
+            links_to = uri_object["<- ?"]
 
             response += "<br/>\n"
             response += "<table>\n"
@@ -196,7 +216,7 @@ tbody tr:hover {background: #fafafa;}
                 response += "<tr>"
                 response += "<td>%s</td>" % link_to
 
-                objects_linked_to = found_uri["<- %s" % link_to]
+                objects_linked_to = uri_object["<- %s" % link_to]
 
                 if type(objects_linked_to) != type([]):
                     objects_linked_to = [objects_linked_to]
@@ -209,7 +229,6 @@ tbody tr:hover {background: #fafafa;}
                         response += "<li>"
 
                     response += '<a href="%s">%s</a>' % (object_linked_to.uri,object_linked_to.uri)
-
                     if len(objects_linked_to) > 1:
                         response += "</li>"
 
@@ -219,8 +238,10 @@ tbody tr:hover {background: #fafafa;}
                 response += "</td></tr>\n"
             response += "</table>\n<br/>\n"
 
-            response += "<footer>Served by Spyder-web</footer>"
+            response += footer_to_include
+            response += """<footer>Served by <a href="http://code.google.com/p/spyder-web/">Spyder-web</a></footer>"""
             response += "</div>"
+
 
             response += "</body></html>"
         else:
