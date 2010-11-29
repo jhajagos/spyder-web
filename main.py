@@ -40,6 +40,12 @@ def main(environ, start_response):
                     Errors["NoSparqlEndPoint"] = "There is no Sparql End Point Specified"
             else:
                 Errors["NoSemanticServerType"] = "No semantic_server_type given in the configuration or invalid type given"
+
+        if config.has_key("public_semantic_server_address"):
+            public_semantic_server_address = config["public_semantic_server_address"]
+        else:
+            public_semantic_server_address = config["semantic_server_address"]
+            
         if config.has_key("uri_to_map"):
             uri_to_map = config["uri_to_map"]
         else:
@@ -268,7 +274,10 @@ tbody tr:hover {background: #fafafa;}
             response += "<br/>"
             response += "<div>"
             response += """Alternative represenations of the resource: <a href="%s">ntriples</a> | <a href="%s">rdf+xml</a>
-            """ % (uri_object.get_machine_readable_representation_uri("text/plain"),uri_object.get_machine_readable_representation_uri("application/rdf+xml"))
+            """ % (uri_object.get_machine_readable_representation_uri("text/plain",public_semantic_server_address),uri_object.get_machine_readable_representation_uri("application/rdf+xml",public_semantic_server_address))
+
+            response += '|| <a href="%s">SPARQL Endpoint</a> | graph: <a href="%s">%s</a>' % (public_semantic_server_address, default_graph,default_graph)
+
             response += "</div>"
             response += "<br/>"
 
