@@ -19,7 +19,7 @@ class RestClient(object):
         for key in self.default_headers:
             if not(headers.has_key(key)):
                 headers[key] = self.default_headers[key]
-
+       
         response, content = self.http_client.request(self.base_uri + resource, method, body, headers = headers)
         if response.has_key("content-type"): # Handles automatic conversion to json
             if "application/json" in response["content-type"]:
