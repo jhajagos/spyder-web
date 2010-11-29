@@ -156,12 +156,12 @@ class SemanticResourceObject(object):
     def get_machine_readable_representation(self,format="text/plain"):
         return self.semantic_connection_obj.construct(self.semantic_connection_obj.construct_subject(self.uri),self.graph_uri, format)
 
-    def get_machine_readable_representation_uri(self,format="text/xml"):
+    def get_machine_readable_representation_uri(self,format,semantic_server_uri):
         rest_client = RestClient("")
         query_hash = {"query": self.semantic_connection_obj.construct_subject(self.uri), "format":format}
         if self.graph_uri is not None:
             query_hash["default-graph-uri"] = self.graph_uri
-        return self.semantic_connection_obj.sparql_endpoint_address + rest_client.encode_query_string(query_hash)
+        return semantic_server_uri + rest_client.encode_query_string(query_hash)
 
     def expand_uri(self,uri_to_expand):
         "Expands uri prefix when the namespace of the prefix is registered"
