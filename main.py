@@ -71,7 +71,7 @@ def main(environ, start_response):
             footer_to_include = ""
 
         if config.has_key("metadata_uri"):
-            metadata_uri = config("metadata_uri")
+            metadata_uri = config["metadata_uri"]
         else:
             metadata_uri = None
 
@@ -286,7 +286,7 @@ tbody tr:hover {background: #fafafa;}
             response += "</div>"
             if metadata_uri:
                 response += "<div>"
-                response += 'Metadata about this published resource: <a href="%s">%s</a> |' % (metadata_uri,metadata_uri)
+                response += 'Metadata about this published resource: <a href="%s">%s</a>' % (metadata_uri,metadata_uri)
                 response += "</div>"
 
 
