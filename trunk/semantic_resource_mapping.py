@@ -41,6 +41,9 @@ class SemanticServerConnection(object):
     def ask_predicate(self, uri):
         return "ask {?s ?p <%s>}" % uri
 
+    def construct_subject(self, uri):
+        return "construct { <%s> ?p ?o } {<%s> ?p ?o}"  % (uri,uri)
+
 class SparqlEndPointConnection(SemanticServerConnection):
     """Handle connection to a sparql server"""
     
@@ -53,7 +56,7 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
     "Connect to a Virtuoso Sparql Endpoint"
     
     def query(self,query_string,default_graph, raw_response=False):
-        "Perform a SPARQL query"
+        "Perform a SPARQL query return results as json"
         query_hash = {"query":query_string}
         if default_graph is not None:
             query_hash["default-graph-uri"] = default_graph
@@ -65,6 +68,17 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
                 return result
             else:
                 return SparqlResult(result)
+        else:
+            raise IOError
+
+    def construct(self,query_string,default_graph=None,response_format="text/plain"):
+        "Perform a construct query return results in raw response_format"
+        
+        rest_client = RestClient(self.sparql_endpoint_address,{})
+        (response,result) = rest_client.get(rest_client.encode_query_string(query_hash))
+        
+        if response["status"] == "200":
+            return result
         else:
             raise IOError
     
@@ -138,6 +152,16 @@ class SemanticResourceObject(object):
             
             else:
                 return resource_object["value"]
+
+    def get_machine_readable_representation(self,format="text/plain"):
+        return self.semantic_connection_obj.construct(self.semantic_connection_obj.construct_subject(self.uri),self.graph_uri, format)
+
+    def get_machine_readable_representation_uri(self,format="text/xml"):
+        rest_client = RestClient("")
+        query_hash = {"query": self.semantic_connection_obj.construct_subject(self.uri), "format":format}
+        if self.graph_uri is not None:
+            query_hash["default-graph-uri"] = self.graph_uri
+        return self.semantic_connection_obj.sparql_endpoint_address + rest_client.encode_query_string(query_hash)
 
     def expand_uri(self,uri_to_expand):
         "Expands uri prefix when the namespace of the prefix is registered"

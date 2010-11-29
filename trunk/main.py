@@ -77,18 +77,41 @@ def main(environ, start_response):
         requested_path = environ["PATH_INFO"]
         uri_object = semantic_resource_map.find_resource_path(requested_path)
         uri_exists = uri_object.exists()
+
+        request_method = environ["REQUEST_METHOD"]
+        if environ.has_key("HTTP_ACCEPT"):
+            http_accept = environ["HTTP_ACCEPT"]
+        else:
+            http_accept = "text/html"
+
+        if "html" in http_accept:
+            content_type = "text/html"
+        elif "text/plain" in http_accept:
+            content_type = "text/plain"
+
+        if query_dictionary.has_key("content_type"):
+            content_type=urllib2.unquote(query_dictionary["content_type"][0])
+
         if not(uri_exists):
-            if environ["QUERY_STRING"]: #Check the query string for a rewrite
-                if query_dictionary.has_key("uri"):
-                    uri_to_decode = query_dictionary["uri"][0]
-                    uri = urllib2.unquote(uri_to_decode)
-                    uri_object = semantic_resource_map.find_resource(uri)
-                    uri_exists = uri_object.exists()
+            if query_dictionary.has_key("uri"):
+                uri_to_decode = query_dictionary["uri"][0]
+                uri = urllib2.unquote(uri_to_decode)
+                uri_object = semantic_resource_map.find_resource(uri)
+                uri_exists = uri_object.exists()
 
-        if uri_exists:
+        if uri_exists:        
             status = "200 Ok"
-            headers = [('Content-type', 'text/html')]
+            headers = [('Content-type', content_type)]
 
+        if content_type not in ["text/plain","application/json","application/rdf+xml","text/html"]:
+            status = "406 Not Acceptable"
+            headers = [('Content-type', "text/plain")]
+            response = "Cannot generate results for 'HTTP_ACCEPT' : '%s'" % content_type
+
+        if uri_exists and request_method=="GET" and content_type in ["text/plain","application/json","application/rdf+xml"]: # Return machine readable represenstation of the resource
+            response = uri_object.get_machine_readable_representation(content_type)
+
+        if uri_exists and content_type=="text/html" and request_method=="GET":
             try:
                 label = uri_object["rdfs:label"]
 
@@ -242,16 +265,24 @@ tbody tr:hover {background: #fafafa;}
                 response += "</td></tr>\n"
             response += "</table>\n<br/>\n"
 
+            response += "<br/>"
+            response += "<div>"
+            response += """Alternative represenations of the resource: <a href="%s">ntriples</a> | <a href="%s">rdf+xml</a>
+            """ % (uri_object.get_machine_readable_representation_uri("text/plain"),uri_object.get_machine_readable_representation_uri("application/rdf+xml"))
+            response += "</div>"
+            response += "<br/>"
+
             response += footer_to_include
             response += """<footer>Served by <a href="http://code.google.com/p/spyder-web/">Spyder-web</a></footer>"""
             response += "</div>"
 
 
             response += "</body></html>"
-        else:
+            
+        if not(uri_exists):
             status = "404 Not Found"
             headers = [('Content-type', 'text/plain')]
-            response = "Not found: " + uri_to_map + requested_path
+            response = "Not found: " + uri_request.uri
             
     start_response(status, headers)
     return [str(response),]
