@@ -1,7 +1,7 @@
 """
     Classes to handle connecting to remote/local sparql endpoints
     and mapping the requested http resource to one that exists
-    in the resource
+    in the resource.
     
 """
 
