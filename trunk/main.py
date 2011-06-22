@@ -95,9 +95,8 @@ def main(environ, start_response):
         else:
             http_accept = "text/html"
 
-        if "html" in http_accept:
-            content_type = "text/html"
-        elif "text/plain" in http_accept:
+        content_type = "text/html"
+        if "text/plain" in http_accept:
             content_type = "text/plain"
 
         if query_dictionary.has_key("content_type"):
@@ -296,7 +295,6 @@ tbody tr:hover {background: #fafafa;}
             response += footer_to_include
             response += """<footer>Served by <a href="http://code.google.com/p/spyder-web/">Spyder-web</a></footer>"""
             response += "</div>"
-
 
             response += "</body></html>"
             
