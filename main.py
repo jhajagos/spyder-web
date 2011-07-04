@@ -10,7 +10,7 @@ from semantic_resource_mapping import *
 import os
 
 def test_application(environ, start_response):
-    environ["SPYDER_WEB_CONFIG_INSTANCE"] = "rxnorm_configuration.json"
+    environ["SPYDER_WEB_CONFIG_INSTANCE"] = "pubmed_configuration.json"
     return main(environ, start_response)
     
 def main(environ, start_response):
@@ -102,6 +102,7 @@ def main(environ, start_response):
         if query_dictionary.has_key("content_type"):
             content_type=urllib2.unquote(query_dictionary["content_type"][0])
 
+
         if not(uri_exists):
             if query_dictionary.has_key("uri"):
                 uri_to_decode = query_dictionary["uri"][0]
@@ -117,9 +118,10 @@ def main(environ, start_response):
             status = "406 Not Acceptable"
             headers = [('Content-type', "text/plain")]
             response = "Cannot generate results for 'HTTP_ACCEPT' : '%s'" % content_type
-
+            
         if uri_exists and request_method=="GET" and content_type in ["text/plain","application/json","application/rdf+xml"]: # Return machine readable represenstation of the resource
             response = uri_object.get_machine_readable_representation(content_type)
+           
 
         if uri_exists and content_type=="text/html" and request_method=="GET":
             try:
@@ -308,7 +310,7 @@ tbody tr:hover {background: #fafafa;}
 
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
-    os.environ["SPYDER_WEB_CONFIG_INSTANCE"] = "rxnorm_configuration.json"
+    os.environ["SPYDER_WEB_CONFIG_INSTANCE"] = "pubmed_configuration.json"
     server = make_server('localhost', 9001, test_application)
     server.serve_forever()
 
