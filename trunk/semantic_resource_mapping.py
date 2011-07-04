@@ -136,6 +136,8 @@ class SemanticResourceObject(object):
         resource_object = sparql_row[field_name]
         if resource_object["type"] == "uri":
             return self.semantic_resource_factory.create_resource(resource_object["value"])
+        elif  resource_object["type"] == "bnode":
+            return self.semantic_resource_factory.create_resource(resource_object["value"])
         else:
             if resource_object["type"] == "literal" or resource_object["type"] == "typed_literal":
                 if resource_object.has_key("xml:lang"):
