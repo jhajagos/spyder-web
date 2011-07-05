@@ -232,7 +232,7 @@ tbody tr:hover {background: #fafafa;}
                     if len(links) > 1:
                         response += "<li>"
                     if type(link) == SemanticResourceObject:
-                        response += '<a href="%s">%s</a>' % (link.uri,link.uri)
+                        response += generate_uri(link,uri_to_map)
                     else:
                         response += "%s" % link.literal_value
 
@@ -267,7 +267,8 @@ tbody tr:hover {background: #fafafa;}
                     if len(objects_linked_to) > 1:
                         response += "<li>"
 
-                    response += '<a href="%s">%s</a>' % (object_linked_to.uri,object_linked_to.uri)
+                    response += generate_uri(object_linked_to,uri_to_map)
+
                     if len(objects_linked_to) > 1:
                         response += "</li>"
 
@@ -307,6 +308,16 @@ tbody tr:hover {background: #fafafa;}
             
     start_response(status, headers)
     return [str(response),]
+
+def generate_uri(object_linked_to,uri_to_map):
+    response = ""
+    if object_linked_to.uri[0:4] == "http":
+        response += '<a href="%s">%s</a>' % (object_linked_to.uri,object_linked_to.uri)
+    else:
+        
+        response += '<a href="%s?uri=%s">%s</a>' % (uri_to_map + "/", urllib2.quote(object_linked_to.uri),object_linked_to.uri)
+    return response
+
 
 if __name__ == '__main__':
     from wsgiref.simple_server import make_server
