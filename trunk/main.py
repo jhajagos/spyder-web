@@ -114,16 +114,8 @@ def main(environ, start_response):
             status = "200 Ok"
             headers = [('Content-type', content_type)]
 
-        if content_type not in ["text/plain","application/json","application/rdf+xml","text/html"]:
-            status = "406 Not Acceptable"
-            headers = [('Content-type', "text/plain")]
-            response = "Cannot generate results for 'HTTP_ACCEPT' : '%s'" % content_type
-            
-        if uri_exists and request_method=="GET" and content_type in ["text/plain","application/json","application/rdf+xml"]: # Return machine readable represenstation of the resource
-            response = uri_object.get_machine_readable_representation(content_type)
-           
-
-        if uri_exists and content_type=="text/html" and request_method=="GET":
+        if uri_exists and request_method=="GET":
+            headers = [('Content-type', 'text/html')]
             try:
                 label = uri_object["rdfs:label"]
 
@@ -305,9 +297,10 @@ tbody tr:hover {background: #fafafa;}
             status = "404 Not Found"
             headers = [('Content-type', 'text/plain')]
             response = "Not found: " + uri_object.uri
-            
+
+    
     start_response(status, headers)
-    return [str(response),]
+    return [response.encode('ascii','ignore'),]
 
 def generate_uri(object_linked_to,uri_to_map):
     response = ""

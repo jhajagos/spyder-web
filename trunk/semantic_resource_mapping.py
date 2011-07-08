@@ -73,8 +73,13 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
 
     def construct(self,query_string,default_graph=None,response_format="text/plain"):
         "Perform a construct query return results in raw response_format"
+        query_hash = {"query":query_string}
         
-        rest_client = RestClient(self.sparql_endpoint_address,{})
+        if default_graph is not None:
+            query_hash["default-graph-uri"] = default_graph
+
+
+        rest_client = RestClient(self.sparql_endpoint_address,{'Accept' : 'text/plain'})
         (response,result) = rest_client.get(rest_client.encode_query_string(query_hash))
         
         if response["status"] == "200":
