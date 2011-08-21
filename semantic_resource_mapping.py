@@ -9,7 +9,7 @@ from rest_client import *
 from string import join
 
 class SparqlResult(object):
-    "Encapsulates a SPARQL result"
+    """Encapsulates a SPARQL result"""
     def __init__(self,raw_sparql_result,response_type="json"):
 
         if response_type == "json":
@@ -22,6 +22,16 @@ class SparqlResult(object):
 
     def __getitem__(self,ind):
         return self.raw_result[ind]
+
+    def to_list_dict(self):
+        list_to_return = []
+        for raw_row in self.raw_result:
+            hash_result = {}
+            for variable in self.variables:
+                hash_result[variable] = raw_row[variable]["value"]
+            list_to_return.append(hash_result)
+        return list_to_return
+
 
 class SemanticServerConnection(object):
     """Abstract class to connect to a semantic server"""
@@ -53,10 +63,10 @@ class SparqlEndPointConnection(SemanticServerConnection):
         pass
         
 class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
-    "Connect to a Virtuoso Sparql Endpoint"
+    """Connect to a Virtuoso Sparql Endpoint"""
     
     def query(self,query_string,default_graph, raw_response=False):
-        "Perform a SPARQL query return results as json"
+        """Perform a SPARQL query return results as json"""
         query_hash = {"query":query_string}
         if default_graph is not None:
             query_hash["default-graph-uri"] = default_graph
@@ -72,7 +82,7 @@ class VirtuosoSparqlEndPointConnection(SparqlEndPointConnection):
             raise IOError
 
     def construct(self,query_string,default_graph=None,response_format="text/plain"):
-        "Perform a construct query return results in raw response_format"
+        """Perform a construct query return results in raw response_format"""
         query_hash = {"query":query_string}
         
         if default_graph is not None:
@@ -118,7 +128,7 @@ class LiteralResourceObject(object):
 
 
 class SemanticResourceObject(object):
-    "Encapsulates a resource a uri in a triple store"
+    """Encapsulates a resource a uri in a triple store"""
     def __init__(self,semantic_connection_obj, uri, semantic_resource_factory, graph_uri = None, namespaces = None, throw_error_missing_predicate=1, limit=1000):
         self.graph_uri = graph_uri
         self.semantic_connection_obj = semantic_connection_obj
@@ -136,7 +146,7 @@ class SemanticResourceObject(object):
         self.links_to = {} #Dictionary for hodling link_to the semantic resource
 
     def _get_resource_from_sparql_result(self,sparql_row,field_name="object"):
-        "See http://www.w3.org/TR/rdf-sparql-json-res/ for Json Spec"
+        """See http://www.w3.org/TR/rdf-sparql-json-res/ for Json Spec"""
         
         resource_object = sparql_row[field_name]
         if resource_object["type"] == "uri":
@@ -171,7 +181,7 @@ class SemanticResourceObject(object):
         return semantic_server_uri + rest_client.encode_query_string(query_hash)
 
     def expand_uri(self,uri_to_expand):
-        "Expands uri prefix when the namespace of the prefix is registered"
+        """Expands uri prefix when the namespace of the prefix is registered"""
         if ":" in uri_to_expand:
             split_uri = uri_to_expand.split(":")
             if len(split_uri):
@@ -184,7 +194,7 @@ class SemanticResourceObject(object):
             return uri_to_expand
 
     def exists(self):
-        "Test if the resorce exists"
+        """Test if the resorce exists"""
         predicate_exists = self.semantic_connection_obj.query(self.semantic_connection_obj.ask_predicate(self.uri),self.graph_uri,True)[u"boolean"]
         subject_exists = self.semantic_connection_obj.query(self.semantic_connection_obj.ask_subject(self.uri),self.graph_uri,True)[u"boolean"]
         if subject_exists or predicate_exists:
@@ -193,7 +203,7 @@ class SemanticResourceObject(object):
             return False
         
     def find_links(self):
-        "Method gets data that this resource links to. In rdf this is where the resource is the subject of a triple."
+        """Method gets data that this resource links to. In rdf this is where the resource is the subject of a triple."""
         if self.limit:
             limit_string = "limit %s" % self.limit
         else:
@@ -214,7 +224,7 @@ class SemanticResourceObject(object):
                         self.links[predicate_uri] = self._get_resource_from_sparql_result(row)
 
     def find_links_to(self):
-        "Get data that links to this resource. In rdf this is where the resource is the object of the triple."
+        """Get data that links to this resource. In rdf this is where the resource is the object of the triple."""
         if self.limit:
             limit_string = "limit %s" % self.limit
         else:
@@ -234,7 +244,7 @@ class SemanticResourceObject(object):
                     self.links_to[predicate_uri] = self._get_resource_from_sparql_result(row,"subject")
 
     def get_link(self,uri):
-        "For a resource given the predicate uri gets the object"
+        """For a resource given the predicate uri gets the object"""
         uri = self.expand_uri(uri)
         if not(self.links_cached):
             self.find_links()
@@ -264,7 +274,7 @@ class SemanticResourceObject(object):
             return 0
 
     def get_link_to(self,uri):
-        "For a resource given the predicate uri that links to get the subject"
+        """For a resource given the predicate uri that links to get the subject"""
         uri = self.expand_uri(uri)
         if not(self.links_to_cached):
             self.find_links_to()
@@ -310,14 +320,14 @@ class SemanticResourceObject(object):
             return self.get_link(item)
         
     def predicates(self):
-        "Returns a list of predicates"
+        """Returns a list of predicates"""
         if not(self.links_cached):
             self.find_links()
             self.links_cached = 1
         return self.links.keys()
             
     def predicates_to(self):
-        "Returns a list of predicates linking to this resource"
+        """Returns a list of predicates linking to this resource"""
         if not(self.links_to_cached):
             self.find_links_to()
             self.links_to_cached = 1
@@ -327,7 +337,7 @@ class SemanticResourceObject(object):
         return "<%s>" % self.uri
 
 class SemanticResourceObjectFactory(object):
-    "Creates, caches, parameterizes, and returns a uri which is stored in a triple store"
+    """Creates, caches, parameterizes, and returns a uri which is stored in a triple store"""
     def __init__(self,semantic_connection_obj, default_graph=None,namespaces={},throw_error_missing_predicate=1,limit = 1000):
         self.semantic_connection_obj = semantic_connection_obj
         self.default_graph = default_graph
@@ -340,7 +350,7 @@ class SemanticResourceObjectFactory(object):
             self.namespaces[namespace[0]] = namespace[1]
         
     def create_resource(self,uri):
-        "Create a semantic resource object"
+        """Create a semantic resource object"""
         if self.semantic_resource_cache.has_key(uri):
             semantic_resource_object = self.semantic_resource_cache[uri]
         else:
@@ -350,8 +360,7 @@ class SemanticResourceObjectFactory(object):
         return semantic_resource_object
 
 class SemanticResourceMapping(object):
-    "Handles mapping of a reasource from a HTTP request to the uri in the web server"
-    
+    """Handles mapping of a resource from a HTTP request to the uri in the web server"""
     def __init__(self, semantic_connection_obj, uri_base_map, default_graph=None,throw_error_missing_predicate=1,limit=1000):
         self.uri_base_map = uri_base_map
         self.semantic_object_factory = SemanticResourceObjectFactory(semantic_connection_obj,default_graph,{},throw_error_missing_predicate,limit)
@@ -364,5 +373,5 @@ class SemanticResourceMapping(object):
         return self.semantic_object_factory.create_resource(full_uri)
     
     def full_uri_expansion(self,path_request):
-        "Transform a path to a full"
+        """Transform a path to a full"""
         return self.uri_base_map + path_request
