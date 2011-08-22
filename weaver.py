@@ -36,12 +36,7 @@ union
 }}
 
 
-def test_server(environ, start_response):
-    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
-    return serve(environ, start_response)
-
 def serve(environ, start_response):
-    pprint.pprint(environ)
     if environ.has_key("WEAVER_SERVICE_DEFINITIONS"):
         service_definitions = json.loads(environ["WEAVER_SERVICE_DEFINITIONS"])
         query_dictionary = urlparse.parse_qs(environ["QUERY_STRING"])
@@ -98,8 +93,12 @@ class Weaving(object):
         else:
             raise RuntimeError, "Service '%s' is not defined" % service
 
+
+def test_server(environ, start_response):
+    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
+    return serve(environ, start_response)
+
 if __name__ == "__main__":
     from wsgiref.simple_server import make_server
-    os.environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
     server = make_server('localhost', 9001, test_server)
     server.serve_forever()
