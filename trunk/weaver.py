@@ -1,6 +1,6 @@
 """
-    Weaver.py is to build simple web-services around a SPARQL query to a semantic web
-    resource.
+    weaver.py allows building simple web-services around a SPARQL query
+    and a sparql endpoint.
 
     Queries and input parameters are specified in a json file format.
     The file is read by the webservice.
@@ -12,6 +12,9 @@ import semantic_resource_mapping
 import json
 import re
 import urllib
+import urlparse
+import os
+import pprint
 
 sample_service_definitions = {"pubmed2cuis" : {"parameters": {"pmid": {"regex" : r'[0-9]{0,10}'}},
                               "sparql_endpoint" : "http://link.informatics.stonybrook.edu/sparqltoo/",
@@ -31,6 +34,36 @@ union
 ?pmidmh rdfs:label ?cuilabel . }
 }""", "default_graph" : "http://link.informatics.stonybrook.edu/pubmed"
 }}
+
+
+def test_server(environ, start_response):
+    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
+    return serve(environ, start_response)
+
+def serve(environ, start_response):
+    pprint.pprint(environ)
+    if environ.has_key("WEAVER_SERVICE_DEFINITIONS"):
+        service_definitions = json.loads(environ["WEAVER_SERVICE_DEFINITIONS"])
+        query_dictionary = urlparse.parse_qs(environ["QUERY_STRING"])
+        requested_path = environ["PATH_INFO"][1:]
+
+        eval_parameters = []
+        for qd in query_dictionary.keys():
+            eval_parameters.append([qd,query_dictionary[qd][0]])
+        weaving_obj = Weaving(service_definitions)
+        try:
+            headers = [("Content-type", "application/json")]
+            response = weaving_obj.evaluate(requested_path,eval_parameters)
+            status = '200 Ok'
+        except RuntimeError, message:
+            headers = [("Content-type", "text/plain")]
+            response = message
+            status = '500 Internal Server Error'
+        print(status,headers)
+        start_response(status, headers)
+        print(response)
+        return [response]
+    return "hi"
 
 class Weaving(object):
     def __init__(self,service_definitions):
@@ -66,5 +99,7 @@ class Weaving(object):
             raise RuntimeError, "Service '%s' is not defined" % service
 
 if __name__ == "__main__":
-    w_obj = Weaving(sample_service_definitions)
-    print(w_obj.evaluate("pubmed2cuis", [["pmid","20828096"]]))
+    from wsgiref.simple_server import make_server
+    os.environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
+    server = make_server('localhost', 9001, test_server)
+    server.serve_forever()
