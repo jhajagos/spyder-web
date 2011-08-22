@@ -13,27 +13,6 @@ import json
 import re
 import urllib
 import urlparse
-import os
-import pprint
-
-sample_service_definitions = {"pubmed2cuis" : {"parameters": {"pmid": {"regex" : r'[0-9]{0,10}'}},
-                              "sparql_endpoint" : "http://link.informatics.stonybrook.edu/sparqltoo/",
-"sparql_query" : """select distinct ?cui ?cuilabel where {
-{
-?pmid  <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
-?pmid <http://link.informatics.stonybrook.edu/pubmed/#MeshHeadingList> ?mh .
-?mh ?seq ?pmidmh .
-?pmidmh <http://link.informatics.stonybrook.edu/pubmed/#MeshMinorDescriptor> ?cui .
-?pmidmh rdfs:label ?cuilabel . }
-union
-{
-?pmid  <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
-?pmid <http://link.informatics.stonybrook.edu/pubmed/#MeshHeadingList> ?mh .
-?mh ?seq ?pmidmh .
-?pmidmh <http://link.informatics.stonybrook.edu/pubmed/#MeshMajorDescriptor> ?cui .
-?pmidmh rdfs:label ?cuilabel . }
-}""", "default_graph" : "http://link.informatics.stonybrook.edu/pubmed"
-}}
 
 
 def serve(environ, start_response):
@@ -95,7 +74,8 @@ class Weaving(object):
 
 
 def test_server(environ, start_response):
-    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sample_service_definitions)
+    from sbu_mi_services import service_definitions
+    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(service_definitions)
     return serve(environ, start_response)
 
 if __name__ == "__main__":
