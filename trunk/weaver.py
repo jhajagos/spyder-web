@@ -34,11 +34,8 @@ def serve(environ, start_response):
             headers = [("Content-type", "text/plain")]
             response = message
             status = '500 Internal Server Error'
-        print(status,headers)
         start_response(status, headers)
-        print(response)
         return [response]
-    return "hi"
 
 class Weaving(object):
     def __init__(self,service_definitions):
