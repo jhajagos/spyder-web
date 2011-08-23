@@ -19,7 +19,8 @@ def serve(environ, start_response):
     if environ.has_key("WEAVER_SERVICE_DEFINITIONS"):
         service_definitions = json.loads(environ["WEAVER_SERVICE_DEFINITIONS"])
         query_dictionary = urlparse.parse_qs(environ["QUERY_STRING"])
-        requested_path = environ["PATH_INFO"][1:]
+        requested_path = environ["PATH_INFO"]
+        requested_path = requested_path.split("/")[-1]
 
         eval_parameters = []
         for qd in query_dictionary.keys():
