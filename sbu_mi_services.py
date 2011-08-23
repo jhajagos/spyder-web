@@ -1,5 +1,5 @@
 service_definitions = {"pubmed2cuis" : {"parameters": {"pmid": {"regex" : "[0-9]{0,10}"}},
-                              "sparql_endpoint" : "http://link.informatics.stonybrook.edu/sparqltoo/",
+                              "sparql_endpoint" : "http://linktoo.informatics.stonybrook.edu:8890/sparql",
 "sparql_query" : """select distinct ?cui ?cuilabel where {
 {
 ?pmid  <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
