@@ -74,8 +74,8 @@ class Weaving(object):
 
 
 def test_server(environ, start_response):
-    from sbu_mi_services import service_definitions
-    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(service_definitions)
+    import sbu_mi_services
+    environ["WEAVER_SERVICE_DEFINITIONS"] = json.dumps(sbu_mi_services.service_definitions)
     return serve(environ, start_response)
 
 if __name__ == "__main__":
