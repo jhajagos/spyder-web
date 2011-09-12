@@ -57,4 +57,4 @@ SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2lit
 ?cui2 <http://link.informatics.stonybrook.edu/umls/CUI/CUI> ?cui2literal.
 }
 """, "default_graph" : "http://nlm.nih.gov/research/umls/",
-"description" : "A web service that takes a CUI and returns a parent (isa) term"}}
+"description" : "A web service that takes a CUI and returns a child (inverse isa) term"}}
