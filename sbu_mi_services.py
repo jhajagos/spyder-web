@@ -17,7 +17,7 @@ union
 }""", "default_graph" : "http://link.informatics.stonybrook.edu/pubmed",
 "description" : "A web service that retrieves MeSH headers aligned to the UMLS CUI based on the PMID."
 },  "cuiIsa" : {"parameters": {"cui": {"regex" : "C[0-9]{0,10}"}},
-             "sparql_endpoint" : "http://link.informatics.stonybrook.edu/sparql/",
+             "sparql_endpoint" : "http://localhost:8890/sparql",
              "sparql_query" : """prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2literal ?aui2label ?cui2literal WHERE {
