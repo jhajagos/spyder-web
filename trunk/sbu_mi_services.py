@@ -62,7 +62,7 @@ SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2lit
             "sparql_endpoint" : "http://localhost:8890/sparql",
             "sparql_query" : """prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2literal ?aui2label ?cui2literal WHERE {
+SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?sab1literal ?cui2 ?aui2 ?aui2literal ?aui2label ?cui2literal WHERE {
 ?cui1 rdf:type <http://link.informatics.stonybrook.edu/umls/CUI> .
 ?cui1 <http://link.informatics.stonybrook.edu/umls/CUI/CUI> "%(cui)s".
 ?aui1 <http://link.informatics.stonybrook.edu/umls/hasCUI> ?cui1 .
@@ -70,6 +70,7 @@ SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2lit
 ?aui1 rdfs:label ?aui1label .
 ?aui1 <http://link.informatics.stonybrook.edu/umls/hasSAB> ?sab1 .
 ?sab1 rdfs:label ?sab1label .
+?sab1 <http://link.informatics.stonybrook.edu/umls/SAB/SAB> ?sab1literal .
 ?aui1 <http://link.informatics.stonybrook.edu/umls/REL#PAR> ?aui2 .
 ?aui2 <http://link.informatics.stonybrook.edu/umls/hasCUI> ?cui2 .
 ?aui2 rdfs:label ?aui2label .
@@ -79,7 +80,7 @@ SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?cui2 ?aui2 ?aui2lit
 }
 """, "default_graph" : "http://nlm.nih.gov/research/umls/",
             "description" : "A web service that takes a CUI and returns a child term"},
-"MeSHCui" : {"parameters": {"MeSH": {"regex" : "[a-zA-Z0-9 \-/\(\)]"}},
+"MeSHCui" : {"parameters": {"MeSH": {"regex" : r"[a-zA-Z0-9 \-/\(\)]"}},
              "sparql_endpoint" : "http://localhost:8890/sparql",
              "sparql_query" : """prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>
