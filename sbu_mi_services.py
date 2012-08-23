@@ -70,7 +70,7 @@ SELECT ?cui1 ?aui1label ?aui1 ?aui1literal ?sab1 ?sab1label ?sab1literal ?cui2 ?
 ?aui1 rdfs:label ?aui1label .
 ?aui1 <http://link.informatics.stonybrook.edu/umls/hasSAB> ?sab1 .
 ?sab1 rdfs:label ?sab1label .
-?sab1 <http://link.informatics.stonybrook.edu/umls/SAB/SAB> ?sab1literal .
+?sab1 <http://link.informatics.stonybrook.edu/umls/SAB/RSAB> ?sab1literal .
 ?aui1 <http://link.informatics.stonybrook.edu/umls/REL#PAR> ?aui2 .
 ?aui2 <http://link.informatics.stonybrook.edu/umls/hasCUI> ?cui2 .
 ?aui2 rdfs:label ?aui2label .
@@ -89,8 +89,7 @@ select ?aui ?cui ?auiliteral ?cuiliteral {
 ?aui rdfs:label "%s{MeSH}" .
 ?aui <http://link.informatics.stonybrook.edu/umls/hasCUI> ?cui .
 ?aui <http://link.informatics.stonybrook.edu/umls/AUI/AUI> ?auiliteral .
-?cui <http://link.informatics.stonybrook.edu/umls/CUI/CUI> ?cuiliteral
-}
+?cui <http://link.informatics.stonybrook.edu/umls/CUI/CUI> ?cuiliteral .
 }
 """, "default_graph" : "http://nlm.nih.gov/research/umls/",
              "description" : "A web service that given a MeSH header returns a CUI"}
