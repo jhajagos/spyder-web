@@ -8,6 +8,14 @@
 from rest_client import *
 from string import join
 
+
+"""
+{ "head": { "link": [], "vars": ["title", "abstract", "pmid", "date"] },
+  "results": { "distinct": false, "ordered": true, "bindings": [
+    { "title": { "type": "literal", "value": "Guidelines for training in electronic ultrasound: guidelines for clinical application. From the ASGE. American Society for Gastrointestinal Endoscopy." }	,
+    "pmid": { "type": "literal", "value": "10343245" }	, "date": { "type": "literal", "value": "1999-07-21" }} ] }
+"""
+
 class SparqlResult(object):
     """Encapsulates a SPARQL result"""
     def __init__(self,raw_sparql_result,response_type="json"):
@@ -28,7 +36,7 @@ class SparqlResult(object):
         for raw_row in self.raw_result:
             hash_result = {}
             for variable in self.variables:
-                if variable in hash_result:
+                if variable in raw_row:
                     hash_result[variable] = raw_row[variable]["value"]
                 else:
                     hash_result[variable] = None
