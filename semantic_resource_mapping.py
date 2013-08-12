@@ -28,7 +28,10 @@ class SparqlResult(object):
         for raw_row in self.raw_result:
             hash_result = {}
             for variable in self.variables:
-                hash_result[variable] = raw_row[variable]["value"]
+                if variable in hash_result:
+                    hash_result[variable] = raw_row[variable]["value"]
+                else:
+                    hash_result[variable] = None
             list_to_return.append(hash_result)
         return list_to_return
 
