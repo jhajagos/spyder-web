@@ -14,7 +14,7 @@ union
 ?mh ?seq ?pmidmh .
 ?pmidmh <http://link.informatics.stonybrook.edu/pubmed/#MeshMajorDescriptor> ?cui .
 ?pmidmh rdfs:label ?cuilabel . }
-}""", "default_graph" : "http://link.informatics.stonybrook.edu/pubmed",
+}""", "default_graph" : "http://link.informatics.stonybrook.edu/pubmed/",
 "description" : "A web service that retrieves MeSH headers aligned to the UMLS CUI based on the PMID."
 },  "cuiIsa" : {"parameters": {"cui": {"regex" : "C[0-9]{0,10}"}},
              "sparql_endpoint" : "http://localhost:8890/sparql",
@@ -92,5 +92,17 @@ select ?aui ?cui ?auiliteral ?cuiliteral {
 ?cui <http://link.informatics.stonybrook.edu/umls/CUI/CUI> ?cuiliteral .
 }
 """, "default_graph" : "http://nlm.nih.gov/research/umls/",
-             "description" : "A web service that given a MeSH header returns a CUI"}
+             "description" : "A web service that given a MeSH header returns a CUI"},
+
+"pubmed2abstract" : {"parameters": {"pmid": {"regex" : "[0-9]{0,10}"}},
+                              "sparql_endpoint" : "http://linktoo.informatics.stonybrook.edu:8890/sparql",
+"sparql_query" : """select distinct ?title, ?abstract, ?pmid where {?pubmedlink <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
+?pubmedlink <http://purl.org/ontology/bibo/pmid> ?pmid .
+?pubmedlink <http://purl.org/dc/elements/1.1/title> ?title .
+optional {
+   ?pubmedlink <http://purl.org/ontology/bibo/abstract> ?abstract .
+}
+}""",
+    "default_graph" : "http://link.informatics.stonybrook.edu/pubmed/"
+    }
 }

@@ -2,5 +2,5 @@
     "uri_to_map": "http://link.informatics.stonybrook.edu",
     "semantic_server_type": "VirtuosoSparqlEndPointConnection",
     "semantic_server_address" : "http://linktoo.informatics.stonybrook.edu:8890/sparql",
-    "default_graph" : "http://link.informatics.stonybrook.edu/pubmed"
+    "default_graph" : "http://link.informatics.stonybrook.edu/pubmed/"
 }
