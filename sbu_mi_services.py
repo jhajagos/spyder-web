@@ -96,9 +96,10 @@ select ?aui ?cui ?auiliteral ?cuiliteral {
 
 "pubmed2abstract" : {"parameters": {"pmid": {"regex" : "[0-9]{0,10}"}},
                               "sparql_endpoint" : "http://linktoo.informatics.stonybrook.edu:8890/sparql",
-"sparql_query" : """select distinct ?title, ?abstract, ?pmid where {?pubmedlink <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
+"sparql_query" : """select distinct ?title, ?abstract, ?pub_date, ?pmid where {?pubmedlink <http://purl.org/ontology/bibo/pmid> "%(pmid)s" .
 ?pubmedlink <http://purl.org/ontology/bibo/pmid> ?pmid .
 ?pubmedlink <http://purl.org/dc/elements/1.1/title> ?title .
+?pubmedlink <http://purl.org/dc/terms/created> ?pub_date .
 optional {
    ?pubmedlink <http://purl.org/ontology/bibo/abstract> ?abstract .
 }
