@@ -280,7 +280,7 @@ class SemanticResourceObject(object):
                 return links
 
             else: # in case of a single resource the language is ignored
-                resources
+                pass #resources
         else:
             return 0
 
