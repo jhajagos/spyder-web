@@ -1,0 +1,1 @@
+A python enabled wsgi application to serve content from a Sparql endpoint.  It is designed to allow multiple Sparql endpoints to be served from a single Apache installation with mod\_wsgi.
